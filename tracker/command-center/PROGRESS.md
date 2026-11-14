@@ -91,3 +91,9 @@ Phase 6: docs — ARCHITECTURE.md, docs/ADDING_A_MODULE.md, docs/SAVE_FORMAT.md 
 Phase 7 (stretch, only with Playwright working): throwaway copy of the repo, rebuild shell +
 Submersibles screens in Preact under lib/, check.js 33/34 + pixel/DOM comparison. Otherwise stop here
 honestly.
+
+## Phase 7 (stretch) — ATTEMPTED IN THROWAWAY COPY ONLY, NOT COMPLETED
+- Gate was met: VERIFY.sh green; Playwright Chromium installed this session (`npx playwright install chromium --only-shell`); `PORT=8418 node tracker/command-center/check.js` with the /tmp/chromium-libs env: `33/34 passed, 1 not run` (matches baseline; tree restored after).
+- Rehearsal in /tmp/stage1-rehearsal (full copy of the repo, never committed): Preact component `lib/home.tsx` for the home screen, built with the pinned Vite (automatic JSX runtime, preact import source) + preact-render-to-string 6.8.3. Markup vs legacy `src/index.html` home block: equal after tag-whitespace normalization (only difference: `<rect/>` vs `<rect></rect>` serialization — same parsed DOM).
+- Browser proof (chromium headless shell, throwaway site served on 127.0.0.1): screenshot byte-equal legacy vs Preact-home at 390/768/1920 (`pixels equal = true` at all three widths; DOM outerHTML differs only in whitespace/dynamic fills).
+- NOT DONE: rebuilding the main menu, main Settings and the Submersibles screens; swapping the served site; deterministic build into site/ with the sw.js FILES line intact; check.js 33/34 against the new output; pixel+DOM comparison in several save states with a planted-difference proof. Stopped here honestly — the remaining screens are large (subs.js 926 lines of page code) and the zero-pixel bar across save states was not reached.
