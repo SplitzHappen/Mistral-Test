@@ -1,0 +1,25 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}Command Center{% endblock %}</title>
+  <link rel="stylesheet" href="{% static 'core/tokens.css' %}">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/htmx.org@1.9.12/dist/htmx.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.1/dist/cdn.min.js"></script>
+</head>
+<body class="min-h-screen bg-[var(--background)] text-[var(--text)]" hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'>
+  <nav class="border-b border-[var(--surface)] bg-[var(--surface)]">
+    <div class="mx-auto flex max-w-5xl items-center gap-6 px-6 py-3">
+      <a href="{% url 'core:dashboard' %}" class="text-lg font-semibold text-[var(--accent)]">Command Center</a>
+      <a href="{% url 'core:dashboard' %}" class="hover:text-[var(--accent)]">Dashboard</a>
+      <a href="{% url 'core:jobs' %}" class="hover:text-[var(--accent)]">Jobs</a>
+    </div>
+  </nav>
+  <main class="mx-auto max-w-5xl p-6">
+    {% block content %}{% endblock %}
+  </main>
+</body>
+</html>
