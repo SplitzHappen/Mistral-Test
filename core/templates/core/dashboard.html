@@ -1,0 +1,104 @@
+{% extends "core/base.html" %}
+{% load money %}
+{% block title %}Dashboard - Command Center{% endblock %}
+{% block content %}
+<h1 class="mb-6 text-2xl font-semibold">Dashboard</h1>
+
+{% if warnings %}
+<section class="mb-6 rounded border border-[var(--warn)] bg-[var(--surface)] p-4">
+  <h2 class="mb-2 font-semibold text-[var(--warn)]">Stale jobs</h2>
+  <ul class="list-disc pl-5">
+    {% for w in warnings %}
+    <li>
+      <span class="font-mono">{{ w.job.name }}</span> has no success within {{ w.job.max_age_seconds }}s
+      (last success: {{ w.last_success_at|default:"never" }})
+    </li>
+    {% endfor %}
+  </ul>
+</section>
+{% endif %}
+
+<section class="mb-6">
+  <h2 class="mb-2 text-xl font-semibold">Balances</h2>
+  <div class="overflow-hidden rounded bg-[var(--surface)]">
+    <table class="w-full text-left">
+      <thead>
+        <tr class="border-b border-[var(--background)] text-[var(--accent)]">
+          <th class="px-4 py-2">Entity</th>
+          <th class="px-4 py-2 text-right">Balance</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for row in balances %}
+        <tr class="border-b border-[var(--background)]">
+          <td class="px-4 py-2"><a class="hover:text-[var(--accent)]" href="{% url 'core:entity_detail' row.entity_id %}">{{ row.entity__name }}</a></td>
+          <td class="px-4 py-2 text-right font-mono">{{ row.balance_minor|money }}</td>
+        </tr>
+        {% empty %}
+        <tr><td class="px-4 py-2" colspan="2">No entities yet.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section class="mb-6">
+  <h2 class="mb-2 text-xl font-semibold">Latest observations</h2>
+  <div class="overflow-hidden rounded bg-[var(--surface)]">
+    <table class="w-full text-left">
+      <thead>
+        <tr class="border-b border-[var(--background)] text-[var(--accent)]">
+          <th class="px-4 py-2">Key</th>
+          <th class="px-4 py-2 text-right">Value</th>
+          <th class="px-4 py-2">Observed at</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for obs in observations %}
+        <tr class="border-b border-[var(--background)]">
+          <td class="px-4 py-2 font-mono">{{ obs.key }}</td>
+          <td class="px-4 py-2 text-right font-mono">{{ obs.value_minor|money }}</td>
+          <td class="px-4 py-2">{{ obs.observed_at }}</td>
+        </tr>
+        {% empty %}
+        <tr><td class="px-4 py-2" colspan="3">No observations yet.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section>
+  <h2 class="mb-2 text-xl font-semibold">Last 10 job runs</h2>
+  <div class="overflow-hidden rounded bg-[var(--surface)]">
+    <table class="w-full text-left">
+      <thead>
+        <tr class="border-b border-[var(--background)] text-[var(--accent)]">
+          <th class="px-4 py-2">Job</th>
+          <th class="px-4 py-2">Scheduled for</th>
+          <th class="px-4 py-2">Started</th>
+          <th class="px-4 py-2">Status</th>
+          <th class="px-4 py-2">Error</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for run in recent_runs %}
+        <tr class="border-b border-[var(--background)]">
+          <td class="px-4 py-2 font-mono">{{ run.job_name }}</td>
+          <td class="px-4 py-2">{{ run.scheduled_for }}</td>
+          <td class="px-4 py-2">{{ run.started_at }}</td>
+          <td class="px-4 py-2">
+            {% if run.status == "success" %}<span class="text-[var(--ok)]">success</span>
+            {% elif run.status == "failed" %}<span class="text-[var(--danger)]">failed</span>
+            {% else %}<span class="text-[var(--warn)]">running</span>{% endif %}
+          </td>
+          <td class="px-4 py-2 max-w-xs truncate font-mono text-xs">{{ run.error }}</td>
+        </tr>
+        {% empty %}
+        <tr><td class="px-4 py-2" colspan="5">No runs yet.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</section>
+{% endblock %}
