@@ -1,0 +1,24 @@
+{
+  "name": "eveniunt-command-center-stage1",
+  "private": true,
+  "version": "0.0.0",
+  "description": "Stage 1 typed base for the Eveniunt Command Center. Additive only: legacy CommonJS files stay untouched, so no \"type\" field here.",
+  "scripts": {
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "lint": "biome check .",
+    "test": "node --test \"tests/**/*.test.ts\"",
+    "build": "vite build",
+    "check": "npm run typecheck && npm run lint && npm run test"
+  },
+  "dependencies": {
+    "preact": "11.2.0"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "2.6.7",
+    "pixelmatch": "8.0.0",
+    "pngjs": "7.0.0",
+    "preact-render-to-string": "6.8.3",
+    "typescript": "7.0.2",
+    "vite": "8.3.8"
+  }
+}
