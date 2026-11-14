@@ -1,0 +1,42 @@
+{% load money %}
+<div id="entity-panel">
+  <div class="overflow-hidden rounded bg-[var(--surface)]">
+    <table class="w-full text-left">
+      <thead>
+        <tr class="border-b border-[var(--background)] text-[var(--accent)]">
+          <th class="px-4 py-2">Occurred at</th>
+          <th class="px-4 py-2">Description</th>
+          <th class="px-4 py-2 text-right">Amount</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for entry in entries %}
+        <tr class="border-b border-[var(--background)]">
+          <td class="px-4 py-2">{{ entry.occurred_at }}</td>
+          <td class="px-4 py-2">{{ entry.description }}</td>
+          <td class="px-4 py-2 text-right font-mono">{{ entry.amount_minor|money }}</td>
+        </tr>
+        {% empty %}
+        <tr><td class="px-4 py-2" colspan="3">No entries yet.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <form x-show="open" hx-post="{% url 'core:entity_detail' entity.pk %}" hx-target="#entity-panel" hx-swap="outerHTML"
+        class="mt-4 rounded bg-[var(--surface)] p-4">
+    <div class="mb-3">
+      <label class="mb-1 block text-sm" for="id_description">Description</label>
+      <input id="id_description" type="text" name="description" maxlength="255" value="{{ form.description.value|default:'' }}"
+             class="w-full rounded border border-[var(--background)] bg-[var(--background)] px-2 py-1">
+      {% for error in form.description.errors %}<p class="mt-1 text-sm text-[var(--danger)]">{{ error }}</p>{% endfor %}
+    </div>
+    <div class="mb-3">
+      <label class="mb-1 block text-sm" for="id_amount_minor">Amount (minor units, nonzero integer)</label>
+      <input id="id_amount_minor" type="number" step="1" name="amount_minor" value="{{ form.amount_minor.value|default:'' }}"
+             class="w-full rounded border border-[var(--background)] bg-[var(--background)] px-2 py-1">
+      {% for error in form.amount_minor.errors %}<p class="mt-1 text-sm text-[var(--danger)]">{{ error }}</p>{% endfor %}
+    </div>
+    <button type="submit" class="rounded bg-[var(--accent)] px-3 py-1 font-semibold text-[var(--background)]">Save</button>
+  </form>
+</div>
