@@ -62,3 +62,14 @@ Phase 4: CC/src/modules/submersibles/logic/ pure port of tracker/src/submersible
 
 ## Next
 Phase 5: CC/src/base/theme/ — the 21 themes as data, look-applier, appearance panel logic; differential vs legacy look.js for every theme x both modes x every option; Atelier keeps its own 20 themes/key.
+
+## Phase 5 — DONE
+- CC/src/base/theme/: themes.ts (THEMES = the Atelier's 20 + the tracker's inserted 'electrope-skyline' = 21, ACCENTS, blankSide/defaultLook/lookFromDoc), color.ts (hexRgb/rgbHex/lum/mix), look.ts (themeOf/sideFor/isDark/resolved/lookVars = everything applyLook() sets: CSS vars, data-theme, zoom, data-motion), panel.ts (esc/chip/swatchDot/themeOpt/picker/themeBlock/appearanceHtml + pure action logic clickAction/changeSeparate/changeLookn/contrastInput/pickerInput/exportThemeJson/parseImport/applyImport). The Atelier keeps its own 20 themes and key — not unified.
+- Reference: CC/tests/reference/theme/atelier.js byte-for-byte (sha256 == `git show b4d02a3:crafting/atelier/src/atelier.js`); tests/theme/ref.ts rebuilds the exact slice tracker/tools/build.js inlines (same markers, same SOLUTION_NINE insertion, asserts 21 themes) and evaluates it against a stand-in page (S/load/window/document/box).
+- tests/theme/differential.test.ts: seed 7e5e11 printed. look values: all 21 themes x {system,light,dark} x mqDark{false,true} with default options, plus 5,000 seeded option cases (accent incl. custom hex, bg/fg overrides incl. invalid hex — both sides throw, compared; contrast/fonts/motion/separate) compared as the exact var map applyLook sets + data-theme + zoom + data-motion. Panel HTML: 2,000 seeded states x open menus, appearanceHtml compared as text. Panel actions: 2,000 sequences x 6 actions driven through legacy bindAppearance handlers vs clickAction & co, state compared by JSON text after every step. Export/import theme JSON: 500 cases. All equal by JSON text and deep.
+- tests/theme/control.test.ts: one planted fault per theme module on a temp copy (electrope-skyline progress colour off by one, lum coefficient 0.0722->0.0723, contrast k 0.9->0.91, tick glyph) — all 4 caught, tree clean.
+- `npm run check`: rc=0, `# tests 61 # pass 61 # fail 0`.
+- Additive after commit: `git status --short | grep -v '^??'` empty; `git diff --name-status b4d02a3 | grep -v '^A'` empty.
+
+## Next
+Phase 6: docs — ARCHITECTURE.md, docs/ADDING_A_MODULE.md, docs/SAVE_FORMAT.md (table of every storage name), docs/TESTING.md, docs/BUILD_AND_RELEASE.md, CONTRIBUTING.md. Every command and path must exist. Then VERIFY.sh at repo root.
