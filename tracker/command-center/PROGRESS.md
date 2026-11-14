@@ -73,3 +73,21 @@ Phase 5: CC/src/base/theme/ — the 21 themes as data, look-applier, appearance 
 
 ## Next
 Phase 6: docs — ARCHITECTURE.md, docs/ADDING_A_MODULE.md, docs/SAVE_FORMAT.md (table of every storage name), docs/TESTING.md, docs/BUILD_AND_RELEASE.md, CONTRIBUTING.md. Every command and path must exist. Then VERIFY.sh at repo root.
+
+## Phase 6 — DONE
+- Docs under CC: ARCHITECTURE.md, docs/ADDING_A_MODULE.md, docs/SAVE_FORMAT.md (table of every storage
+  name: IDB eveniunt-command-center/save/main + main-rev, LS eveniunt-command-center-save, legacy
+  eveniunt-tracker/state/main + eveniunt-tracker-state (read-only), eveniunt-tracker-ui,
+  eveniunt-in-app, eveniunt-tracker-fired, eveniunt-cloud-device, eveniunt-command-center-device,
+  eveniunt-subs-prices, sessionStorage eveniunt-subs-ui/-push/-reloaded; save doc shape, EVT1/EVT2
+  codes, error codes), docs/TESTING.md, docs/BUILD_AND_RELEASE.md, CONTRIBUTING.md. Every command and
+  path in them verified to exist.
+- VERIFY.sh at repo root: npm ci, npm run check, submersibles differential x 3 TZs, legacy suites
+  (unredirected + both preloads), additive checks, build.js clean-tree check; exits non-zero on
+  failure. Raw result: rc=0, "VERIFY: all green" (npm run check 61/61; differential 9/9 x 3 TZs;
+  legacy 76/7/15/5 and 76/5 via preload).
+
+## Next
+Phase 7 (stretch, only with Playwright working): throwaway copy of the repo, rebuild shell +
+Submersibles screens in Preact under lib/, check.js 33/34 + pixel/DOM comparison. Otherwise stop here
+honestly.
