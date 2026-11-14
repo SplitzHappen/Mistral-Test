@@ -1,0 +1,41 @@
+{% extends "core/base.html" %}
+{% block title %}Jobs - Command Center{% endblock %}
+{% block content %}
+<h1 class="mb-6 text-2xl font-semibold">Jobs</h1>
+<div class="overflow-hidden rounded bg-[var(--surface)]">
+  <table class="w-full text-left">
+    <thead>
+      <tr class="border-b border-[var(--background)] text-[var(--accent)]">
+        <th class="px-4 py-2">Job</th>
+        <th class="px-4 py-2">Interval (s)</th>
+        <th class="px-4 py-2">Max age (s)</th>
+        <th class="px-4 py-2">Last run</th>
+        <th class="px-4 py-2">Last success</th>
+        <th class="px-4 py-2">Health</th>
+        <th class="px-4 py-2"></th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for row in rows %}
+      <tr class="border-b border-[var(--background)]">
+        <td class="px-4 py-2 font-mono">{{ row.job.name }}</td>
+        <td class="px-4 py-2">{{ row.job.interval_seconds }}</td>
+        <td class="px-4 py-2">{{ row.job.max_age_seconds }}</td>
+        <td class="px-4 py-2">{{ row.last_run.started_at|default:"never" }}</td>
+        <td class="px-4 py-2">{{ row.last_success_at|default:"never" }}</td>
+        <td class="px-4 py-2">
+          {% if row.stale %}<span class="text-[var(--warn)]">no success within max age</span>
+          {% else %}<span class="text-[var(--ok)]">ok</span>{% endif %}
+        </td>
+        <td class="px-4 py-2 text-right">
+          <form method="post" action="{% url 'core:job_run' row.job.name %}">
+            {% csrf_token %}
+            <button type="submit" class="rounded bg-[var(--accent)] px-3 py-1 font-semibold text-[var(--background)]">Run now</button>
+          </form>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}
