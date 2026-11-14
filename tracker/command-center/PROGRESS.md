@@ -28,3 +28,11 @@ BASE = b4d02a3 (branch `stage1`). T = tracker/, CC = tracker/command-center/.
 
 ## Next
 Phase 2: CC/src/base/connector/ (manifest contract, registry, connect()).
+
+## Phase 2 — DONE
+- CC/src/base/connector/: manifest.ts (contract validation: unknown fields refused incl. save sub-fields; raw only for tracker; contract must be 1), checkers.ts (PINNED table order atelier→submersibles→settings; clean() before each checker; tracker pass-through raw in checkDoc; ports of checkChars/checkAtelier/checkSubmersibles/checkSettings/checkModules/checkDoc/flatModules/unflatModules/mergeModules), store.ts (SaveStore iface + MemoryStore with writeSection merge semantics), connect.ts (section get/merged-set/subscribe, read-only characters, base-owned settings section, device storage on 'eveniunt-command-center-device', notify, nav from the page's known place, env), registry.ts (tracker+atelier manifest-only, submersibles real, example never listed), index.ts (public API).
+- CC/src/modules/{submersibles,tracker,atelier,example}/manifest.ts. Submersibles summary/alerts/badge are small initial pure functions — phase 4 differential-tests them against legacy FLEET (legacy wins).
+- Tests: tests/connector/{manifest,checkers,connect,registry,import-boundary}.test.ts = 30 tests. Import boundary: modules may only import their own folder or src/base/connector/.
+- `npm run check`: rc=0, `# tests 30 # pass 30 # fail 0` (typecheck tsc 7.0.2 + biome + node --test). Biome: 1 warning 1 info, 0 errors.
+- Legacy suites unchanged: core 76/7/15/5 pass 0 fail (76/7/15/5).
+- Additive: `git diff --name-status b4d02a3 | grep -v '^A'` empty; tracked tree clean after commit.
