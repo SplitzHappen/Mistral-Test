@@ -36,3 +36,17 @@ Phase 2: CC/src/base/connector/ (manifest contract, registry, connect()).
 - `npm run check`: rc=0, `# tests 30 # pass 30 # fail 0` (typecheck tsc 7.0.2 + biome + node --test). Biome: 1 warning 1 info, 0 errors.
 - Legacy suites unchanged: core 76/7/15/5 pass 0 fail (76/7/15/5).
 - Additive: `git diff --name-status b4d02a3 | grep -v '^A'` empty; tracked tree clean after commit.
+
+## Phase 3 — DONE
+- CC/src/base/core/: typed transliterations of tracker/src/core/{save,model,codec,merge,cloud,storage}.js as {util,save,model,codec,merge,cloud,storage,compat,index}.ts. Explicit imports replace the CC/ET globals; clock/randomness via env (setEnv); mutable legacy props exposed via setters (save.setKind, storage.set*, cloud.limits.CLOUD_MAX_BYTES, ...).
+- compat.ts installs globalThis.CC/ET with the exact legacy key order (captured empirically via vm: CC 43 keys, ET 87 keys), defineProperty accessors for mutables, CLOUD_BASE non-enumerable at load.
+- Reference copies: CC/tests/reference/core/{save,model,codec,merge,cloud,storage}.js byte-for-byte; tests/core/reference.test.ts verifies sha256 == `git show b4d02a3:tracker/src/core/<f>.js`.
+- tests/core/preload.js (CJS) redirects Module._resolveFilename for the six legacy paths to compat.ts. `node --require tests/core/preload.js tests/core.test.js` from T: 76/76; unredirected: 76/76. ffxivcollect.js and links.js stay legacy.
+- Tests: tests/core/{reference,compat,differential,control}.test.ts. Differential seed printed: 5eed1234 — checkers 25,000 + merges 25,000 seeded cases (hostile input incl. __proto__, huge strings, deep nesting, wrong types), codec 2,000 round trips/error codes, storage scenarios, scripted cloud exchanges; all equal old-vs-new by value and JSON text.
+- Control: one planted fault per ported file on a temp copy (`<f>.controltmp.ts`, removed in finally; tree verified clean): save 20000->20001 cut, model percent /10->/100, codec join(".")->join(","), merge clash local->remote wins, cloud 412->413, storage storedRev === -> !==. All six caught.
+- `npm run check`: rc=0, `# tests 40 # pass 40 # fail 0` (typecheck + biome 0 errors + node --test).
+- Legacy suites from T: core 76/76, helper 7/7, submarines 15/15, earn 5/5; core via preload 76/76.
+- Additive after commit: `git status --short | grep -v '^??'` empty; `git diff --name-status b4d02a3 | grep -v '^A'` empty.
+
+## Next
+Phase 4: CC/src/modules/submersibles/logic/ pure port of tracker/src/submersibles/{fleet,advisor,push,earn}.js + pure helpers of subs.js; differential >=2,000 seeded cases per family in TZ=UTC/America/Los_Angeles/Pacific/Auckland; calendar file byte-equal; controls; submarines 15 + earn 5 + core 76 via compat.

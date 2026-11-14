@@ -9,6 +9,7 @@ declare module "node:assert/strict" {
 	export function equal(a: unknown, b: unknown, msg?: string): void;
 	export function deepEqual(a: unknown, b: unknown, msg?: string): void;
 	export function notDeepEqual(a: unknown, b: unknown, msg?: string): void;
+	export function notEqual(a: unknown, b: unknown, msg?: string): void;
 	export function ok(v: unknown, msg?: string): void;
 	export function throws(
 		fn: () => unknown,
@@ -21,6 +22,7 @@ declare module "node:assert/strict" {
 		equal: typeof equal;
 		deepEqual: typeof deepEqual;
 		notDeepEqual: typeof notDeepEqual;
+		notEqual: typeof notEqual;
 		ok: typeof ok;
 		throws: typeof throws;
 		match: typeof match;
@@ -34,17 +36,18 @@ declare module "node:url" {
 }
 
 declare module "node:crypto" {
-	export function createHash(algorithm: string): {
-		update(data: string): unknown;
+	export interface Hash {
+		update(data: string): Hash;
 		digest(encoding: "hex"): string;
-	};
+	}
+	export function createHash(algorithm: string): Hash;
 	export function randomBytes(size: number): {
 		toString(encoding: "hex"): string;
 	};
 }
 
 declare module "node:fs" {
-	export function readFileSync(path: string, encoding: "utf8"): string;
+	export function readFileSync(path: string, encoding?: "utf8"): string;
 	export function readdirSync(
 		path: string,
 		opts: { withFileTypes: true },
@@ -68,4 +71,38 @@ declare module "node:process" {
 	export function cwd(): string;
 	const process: { cwd(): string; env: Record<string, string | undefined> };
 	export default process;
+}
+
+declare module "node:vm" {
+	export function createContext(
+		sandbox: Record<string, unknown>,
+	): Record<string, unknown>;
+	export function runInContext(
+		code: string,
+		ctx: Record<string, unknown>,
+		opts?: { filename?: string },
+	): unknown;
+}
+
+declare module "node:child_process" {
+	export function execFileSync(
+		cmd: string,
+		args: string[],
+		opts?: { encoding?: string; cwd?: string; maxBuffer?: number },
+	): string;
+	export function spawnSync(
+		cmd: string,
+		args: string[],
+		opts?: { encoding?: string; cwd?: string },
+	): { status: number | null; stdout: string; stderr: string };
+}
+
+declare const process: {
+	cwd(): string;
+	env: Record<string, string | undefined>;
+};
+
+declare module "node:fs" {
+	export function writeFileSync(path: string, data: string): void;
+	export function rmSync(path: string, opts?: { force?: boolean }): void;
 }
