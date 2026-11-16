@@ -25,6 +25,12 @@ for tz in UTC America/Los_Angeles Pacific/Auckland; do
   (cd "$CC" && TZ=$tz node --test "tests/submersibles/differential.test.ts") ; check $? "TZ=$tz differential"
 done
 
+step "audit control tests (planted mutants); time-mattering ones in three time zones"
+for tz in UTC America/Los_Angeles Pacific/Auckland; do
+  (cd "$CC" && TZ=$tz node --test --test-timeout=300000 tests/submersibles/audit-clock.test.ts tests/submersibles/audit-quiet.test.ts tests/shell/shell-differential.test.ts) ; check $? "TZ=$tz audit clock/quiet/shell-differential"
+done
+(cd "$CC" && node --test --test-timeout=300000 tests/core/audit-depth.test.ts tests/submersibles/audit-advisor-sort.test.ts tests/shell/reference.test.ts) ; check $? "audit depth/advisor-sort/shell reference"
+
 step "legacy suites (unredirected and via preload)"
 (cd "$T" && node tests/core.test.js) ; check $? "core"
 (cd "$T" && node tests/helper.test.js) ; check $? "helper"

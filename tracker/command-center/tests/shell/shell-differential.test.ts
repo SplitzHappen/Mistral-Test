@@ -25,6 +25,15 @@ const MIN = 60000;
 console.log(
 	`shell differential seed: ${SEED.toString(16)} tz: ${process.env.TZ || "(system)"}`,
 );
+// method per function:
+// - summary: today's shell.js is run in a vm against a stand-in page (fake DOM/storage/timers/clock);
+//   the tile line is read from [data-live="submersibles"] innerHTML after showSave; port side is
+//   submersiblesManifest.summary(doc, now) -> logic/shell.ts homeTileLine (time.summary/fmtClock/subLabel).
+// - characterBadge: legacy fcOf is observed through the <small> under each character in #save's list;
+//   port side is submersiblesManifest.characterBadge -> logic/shell.ts fcOf.
+// - alerts.due + banners + marks: today's FLEET.startAlerts is driven on a stand-in page with a fake
+//   clock (api.shown, onAlert capture, device marks in fake localStorage), tick by tick; port side is
+//   logic/shell.ts dueBanners/bannerText and submersiblesManifest.alerts.due(sec, now, opened, marks).
 
 let fakeNow = 0;
 class FakeDate extends Date {
