@@ -39,7 +39,9 @@ function zoneHasTransitionOn(mo: number, d: number): boolean {
 	return b - a !== DAY;
 }
 const hasDST = DST_DATES.some(([mo, d]) => zoneHasTransitionOn(mo, d));
-console.log(`audit-clock: zone ${TZ} has a DST transition on one of the listed dates: ${hasDST}`);
+console.log(
+	`audit-clock: zone ${TZ} has a DST transition on one of the listed dates: ${hasDST}`,
+);
 
 function fixedPairs(): [number, number][] {
 	const pairs: [number, number][] = [];
@@ -62,8 +64,7 @@ function fixedPairs(): [number, number][] {
 			at(2026, mo, d + 2, 3, 0),
 			at(2026, mo, d - 2, 12, 0),
 		];
-		for (const n of nows)
-			for (const t of targets) pairs.push([t, n]);
+		for (const n of nows) for (const t of targets) pairs.push([t, n]);
 	}
 	// around local midnight in general (any day of 2026)
 	for (const day of [at(2026, 0, 1), at(2026, 5, 15), at(2026, 11, 31)]) {
@@ -77,7 +78,10 @@ function fixedPairs(): [number, number][] {
 				[23, 59],
 				[12, 0],
 			] as const)
-				pairs.push([at(y, mo, midnight + dh, h, m), at(y, mo, midnight, 0, 30)]);
+				pairs.push([
+					at(y, mo, midnight + dh, h, m),
+					at(y, mo, midnight, 0, 30),
+				]);
 	}
 	return pairs;
 }
@@ -95,7 +99,11 @@ test("audit clock: fmtClock port == frozen legacy FLEET on fixed DST/midnight pa
 	for (let i = 0; i < 2000; i++) {
 		const n = at(2026, 0, 1) + Math.floor(rand() * 365 * DAY);
 		const t = n + Math.floor((rand() - 0.5) * 14 * DAY);
-		assert.equal(time.fmtClock(t, n), legacy.FLEET.fmtClock(t, n), `seed case ${i}`);
+		assert.equal(
+			time.fmtClock(t, n),
+			legacy.FLEET.fmtClock(t, n),
+			`seed case ${i}`,
+		);
 	}
 });
 
@@ -108,7 +116,8 @@ test("audit clock: planted Math.floor on a temp copy of time.ts is caught in DST
 	const tmpPath = join(LOGIC, "time.controltmp.ts");
 	writeFileSync(tmpPath, src.replace(from, to));
 	try {
-		const N = await import("../../src/modules/submersibles/logic/time.controltmp.ts");
+		const tmpMod = "time.controltmp.ts";
+		const N = await import(`../../src/modules/submersibles/logic/${tmpMod}`);
 		let diffs = 0;
 		let example = "";
 		for (const [t, n] of fixedPairs()) {
@@ -120,14 +129,26 @@ test("audit clock: planted Math.floor on a temp copy of time.ts is caught in DST
 					example = `fmtClock(${new Date(t).toISOString()} local ${new Date(t).toString()}, now ${new Date(n).toString()}): legacy ${JSON.stringify(leg)} mutant ${JSON.stringify(mutant)}`;
 			}
 			// the unmutated port must agree with legacy everywhere
-			assert.equal(time.fmtClock(t, n), leg, "unmutated port differs from legacy");
+			assert.equal(
+				time.fmtClock(t, n),
+				leg,
+				"unmutated port differs from legacy",
+			);
 		}
 		if (hasDST) {
 			assert.ok(diffs > 0, `floor mutant NOT caught in zone ${TZ}`);
-			console.log(`audit-clock: planted Math.floor caught in ${TZ}: ${diffs} fixed pairs differ; first: ${example}`);
+			console.log(
+				`audit-clock: planted Math.floor caught in ${TZ}: ${diffs} fixed pairs differ; first: ${example}`,
+			);
 		} else {
-			assert.equal(diffs, 0, `zone ${TZ} has no DST on the listed dates: floor mutant indistinguishable here (gated)`);
-			console.log(`audit-clock: zone ${TZ} has no DST transition on the listed dates; floor mutant indistinguishable here, assertion gated to DST zones`);
+			assert.equal(
+				diffs,
+				0,
+				`zone ${TZ} has no DST on the listed dates: floor mutant indistinguishable here (gated)`,
+			);
+			console.log(
+				`audit-clock: zone ${TZ} has no DST transition on the listed dates; floor mutant indistinguishable here, assertion gated to DST zones`,
+			);
 		}
 	} finally {
 		rmSync(tmpPath, { force: true });

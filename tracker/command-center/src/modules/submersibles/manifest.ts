@@ -1,24 +1,9 @@
 // The Submersibles module's manifest: data and pure functions only. This is the one REAL module of stage 1
-// (tracker and atelier are manifest-only; the example module is never published). The small pure functions here
-// are the module's contract surface; phase 4 ports the full logic and differential-tests it against the legacy
-// FLEET/PUSH code (legacy wins any disagreement).
+// (tracker and atelier are manifest-only; the example module is never published). The pure functions here are
+// the module's contract surface; they call the ported logic in ./logic (time.*, shell.*), which is
+// differential-tested against the frozen legacy shell.js / fleet.js (legacy wins any disagreement).
 import { checkSubmersibles, type Doc } from "../../base/connector/index.ts";
-
-interface Sub {
-	fcId?: unknown;
-	slot?: unknown;
-	voyage?: { returnAt?: unknown } | null;
-}
-
-function sectionOf(doc: Doc): Record<string, unknown> {
-	return ((doc.modules.submersibles as Record<string, unknown>) ||
-		{}) as Record<string, unknown>;
-}
-
-function subsOf(sec: unknown): Record<string, Sub> {
-	const s = (sec as Record<string, unknown>) || {};
-	return (s.subs as Record<string, Sub>) || {};
-}
+import * as shell from "./logic/shell.ts";
 
 export const submersiblesManifest = {
 	contract: 1,
@@ -41,42 +26,37 @@ export const submersiblesManifest = {
 		label: "Submersibles",
 	},
 	summary(doc: Doc, now: number) {
-		const subs = subsOf(sectionOf(doc));
-		let back = 0;
-		let next: { id: string; returnAt: number } | null = null;
-		for (const [id, s] of Object.entries(subs)) {
-			const r =
-				s.voyage && typeof s.voyage.returnAt === "number"
-					? s.voyage.returnAt
-					: null;
-			if (r == null) continue;
-			if (r <= now) back++;
-			else if (!next || r < next.returnAt) next = { id, returnAt: r };
-		}
-		return { back, next };
+		// the home tile line, exactly as the legacy shell writes it (including "No free company yet")
+		return shell.homeTileLine(doc?.modules?.submersibles, now);
 	},
 	characterBadge(doc: Doc, charId: string) {
-		const fcs =
-			(sectionOf(doc).fcs as Record<
-				string,
-				{ name?: unknown; charId?: unknown }
-			>) || {};
-		for (const f of Object.values(fcs))
-			if (f.charId === charId) return String(f.name || "");
-		return "";
+		// the free company name under a character, exactly as the legacy shell's fcOf finds it
+		return shell.fcOf(doc?.modules?.submersibles, charId);
 	},
 	characterFields: [{ key: "fc", label: "Free company" }],
 	alerts: {
-		due(section: unknown, now: number) {
-			const out: { id: string; returnAt: number }[] = [];
-			for (const [id, s] of Object.entries(subsOf(section))) {
-				const r =
-					s.voyage && typeof s.voyage.returnAt === "number"
-						? s.voyage.returnAt
-						: null;
-				if (r != null && r <= now) out.push({ id, returnAt: r });
-			}
-			return out;
+		// today's in-app alert decision (FLEET.startAlerts) as a pure function of now, the page's opened
+		// instant and the shown marks; defaults reproduce a page just opened at `now`
+		due(
+			section: unknown,
+			now: number,
+			opened = now,
+			marks: Record<string, number> = {},
+		) {
+			const r = shell.dueBanners(
+				section as Parameters<typeof shell.dueBanners>[0],
+				now,
+				opened,
+				marks,
+			);
+			return r
+				? r.due.map((x) => ({
+						id: x.id,
+						fcId: x.fcId,
+						status: x.status,
+						returnAt: x.sub.voyage?.returnAt,
+					}))
+				: [];
 		},
 		link: "submersibles/",
 	},

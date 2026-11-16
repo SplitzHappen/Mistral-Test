@@ -45,7 +45,9 @@ function legacyApi(): Record<string, any> {
 }
 
 const L = legacyApi();
-console.log(`audit-depth seed: ${SEED.toString(16)} tz: ${process.env.TZ || "(system)"}`);
+console.log(
+	`audit-depth seed: ${SEED.toString(16)} tz: ${process.env.TZ || "(system)"}`,
+);
 
 function mulberry32(seed: number): () => number {
 	let a = seed >>> 0;
@@ -81,16 +83,32 @@ function mixedChain(n: number, seed: () => number): unknown {
 
 const CHAIN_N = 13; // containers at depths 0..12, covering 9, 10, 11 and 12
 
-function checkDepthCut(label: string, portClean: (v: unknown) => unknown): void {
-	for (const chain of [objChain(CHAIN_N), arrChain(CHAIN_N), mixedChain(CHAIN_N, mulberry32(SEED))]) {
+function checkDepthCut(
+	label: string,
+	portClean: (v: unknown) => unknown,
+): void {
+	for (const chain of [
+		objChain(CHAIN_N),
+		arrChain(CHAIN_N),
+		mixedChain(CHAIN_N, mulberry32(SEED)),
+	]) {
 		const p = JSON.stringify(portClean(chain));
 		const l = JSON.stringify(L.CC.clean(chain));
 		assert.equal(p, l, `${label}: port ${p} != legacy ${l}`);
 		// containers at depths 9 and 10 survive (their markers M9/M10 are present)...
-		assert.ok(p.includes('"d9":"M9"') || p.includes('"M9"'), `${label}: depth 9 container kept`);
-		assert.ok(p.includes('"d10":"M10"') || p.includes('"M10"'), `${label}: depth 10 container kept`);
+		assert.ok(
+			p.includes('"d9":"M9"') || p.includes('"M9"'),
+			`${label}: depth 9 container kept`,
+		);
+		assert.ok(
+			p.includes('"d10":"M10"') || p.includes('"M10"'),
+			`${label}: depth 10 container kept`,
+		);
 		// ...the container at depth 11 is cut to null, so M11/M12 are gone
-		assert.ok(!p.includes("M11") && !p.includes("M12"), `${label}: depth 11/12 containers null`);
+		assert.ok(
+			!p.includes("M11") && !p.includes("M12"),
+			`${label}: depth 11/12 containers null`,
+		);
 	}
 }
 
@@ -100,7 +118,11 @@ test("audit depth: clean() keeps depth <= 10 and nulls depth 11/12, port == lega
 });
 
 test("audit depth: through checkModules and checkDoc (device/moved), port == legacy", () => {
-	for (const chain of [objChain(CHAIN_N), arrChain(CHAIN_N), mixedChain(CHAIN_N, mulberry32(SEED + 1))]) {
+	for (const chain of [
+		objChain(CHAIN_N),
+		arrChain(CHAIN_N),
+		mixedChain(CHAIN_N, mulberry32(SEED + 1)),
+	]) {
 		const arr = chain;
 		const mods = { depthprobe: chain, other: arr };
 		assert.equal(
@@ -138,15 +160,23 @@ test("audit depth: through checkModules and checkDoc (device/moved), port == leg
 // seeded random nested structures through clean + checkModules + checkDoc, port vs legacy
 const rand = mulberry32(SEED);
 const rint = (n: number) => Math.floor(rand() * n);
-const KEYS = ["k", "j", "__proto__", "constructor", "a-b.c:d", "x".repeat(70), "ok"];
+const KEYS = [
+	"k",
+	"j",
+	"__proto__",
+	"constructor",
+	"a-b.c:d",
+	"x".repeat(70),
+	"ok",
+];
 
 function randNested(depth: number): unknown {
-	if (depth <= 0 || rand() < 0.25)
-		return rand() < 0.5 ? "MARK" : rint(1000);
+	if (depth <= 0 || rand() < 0.25) return rand() < 0.5 ? "MARK" : rint(1000);
 	if (rand() < 0.5) {
 		const o: Record<string, unknown> = {};
 		const n = 1 + rint(3);
-		for (let i = 0; i < n; i++) o[KEYS[rint(KEYS.length)] + i] = randNested(depth - 1);
+		for (let i = 0; i < n; i++)
+			o[KEYS[rint(KEYS.length)] + i] = randNested(depth - 1);
 		return o;
 	}
 	const a: unknown[] = [];
@@ -168,7 +198,10 @@ test("audit depth: 2000 seeded nested structures through clean/checkModules/chec
 			JSON.stringify(L.CC.clean(v)),
 			`connector clean seed case ${i}`,
 		);
-		const mods = { depthprobe: v, submersibles: { fcs: {}, subs: {}, trips: {}, settings: {} } };
+		const mods = {
+			depthprobe: v,
+			submersibles: { fcs: {}, subs: {}, trips: {}, settings: {} },
+		};
 		assert.equal(
 			JSON.stringify(save.checkModules(mods)),
 			JSON.stringify(L.CC.checkModules(mods)),
@@ -204,7 +237,11 @@ test("audit depth: 2000 seeded nested structures through clean/checkModules/chec
 test("audit depth: planted `depth > 11` on temp copies of BOTH clean() ports is caught", async () => {
 	const targets = [
 		{ dir: join(CC, "src", "base", "core"), file: "save.ts", mod: "save" },
-		{ dir: join(CC, "src", "base", "connector"), file: "checkers.ts", mod: "checkers" },
+		{
+			dir: join(CC, "src", "base", "connector"),
+			file: "checkers.ts",
+			mod: "checkers",
+		},
 	];
 	for (const t of targets) {
 		const srcPath = join(t.dir, t.file);
@@ -224,9 +261,19 @@ test("audit depth: planted `depth > 11` on temp copies of BOTH clean() ports is 
 			const chain = objChain(CHAIN_N);
 			const mutantClean = JSON.stringify(N.clean(chain, 0));
 			const legacyClean = JSON.stringify(L.CC.clean(chain));
-			assert.notEqual(mutantClean, legacyClean, `${t.file}: depth mutant NOT caught by clean()`);
-			assert.ok(mutantClean.includes("M11"), `${t.file}: mutant keeps the depth-11 container`);
-			assert.ok(!legacyClean.includes("M11"), `${t.file}: legacy cuts the depth-11 container`);
+			assert.notEqual(
+				mutantClean,
+				legacyClean,
+				`${t.file}: depth mutant NOT caught by clean()`,
+			);
+			assert.ok(
+				mutantClean.includes("M11"),
+				`${t.file}: mutant keeps the depth-11 container`,
+			);
+			assert.ok(
+				!legacyClean.includes("M11"),
+				`${t.file}: legacy cuts the depth-11 container`,
+			);
 			// through the checkers that call clean()
 			const mods = { depthprobe: chain };
 			assert.notEqual(
@@ -249,14 +296,20 @@ test("audit depth: planted `depth > 11` on temp copies of BOTH clean() ports is 
 				`${t.file}: depth mutant NOT caught by checkDoc()`,
 			);
 			// and the array chain at depth 11/12
-			for (const chain2 of [objChain(CHAIN_N), arrChain(CHAIN_N), mixedChain(CHAIN_N, mulberry32(SEED + 2))]) {
+			for (const chain2 of [
+				objChain(CHAIN_N),
+				arrChain(CHAIN_N),
+				mixedChain(CHAIN_N, mulberry32(SEED + 2)),
+			]) {
 				assert.notEqual(
 					JSON.stringify(N.clean(chain2, 0)),
 					JSON.stringify(L.CC.clean(chain2)),
 					`${t.file}: depth mutant NOT caught by chain`,
 				);
 			}
-			console.log(`audit-depth: planted depth>11 in ${t.file} caught (clean, checkModules, checkDoc, obj/arr/mixed chains with containers at depths 9-12)`);
+			console.log(
+				`audit-depth: planted depth>11 in ${t.file} caught (clean, checkModules, checkDoc, obj/arr/mixed chains with containers at depths 9-12)`,
+			);
 		} finally {
 			rmSync(tmpPath, { force: true });
 		}

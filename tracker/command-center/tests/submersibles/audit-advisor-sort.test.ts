@@ -2,8 +2,8 @@ import assert from "node:assert/strict";
 import { readFileSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { test } from "node:test";
-import { createAdvisor } from "../../src/modules/submersibles/logic/voyage.ts";
 import { search } from "../../src/modules/submersibles/logic/voyage/search.ts";
+import { createAdvisor } from "../../src/modules/submersibles/logic/voyage.ts";
 import { legacyApi, loadData, mulberry32 } from "./ref.ts";
 
 // Audit gap (b): the advisor search's FINAL ordering `b.score - a.score || a.ev.seconds - b.ev.seconds`.
@@ -21,10 +21,15 @@ const legacy = legacyApi();
 const D = loadData();
 legacy.ADVISOR.init(D);
 const adv = createAdvisor(D);
-const st = adv.stats(145, [0, 1, 2, 3].map((i) => D.parts[i].id));
+const st = adv.stats(
+	145,
+	[0, 1, 2, 3].map((i) => D.parts[i].id),
+) as any;
 assert.ok(st, "stats for rank 145 must be computable");
 
-console.log(`audit-advisor-sort seed: ${SEED.toString(16)} tz: ${process.env.TZ || "(system)"}`);
+console.log(
+	`audit-advisor-sort seed: ${SEED.toString(16)} tz: ${process.env.TZ || "(system)"}`,
+);
 
 const pool = D.sectors.filter((s: any) => s.sea === D.seas[0].id);
 
@@ -33,28 +38,42 @@ function orderingOk(res: any[]): void {
 		const a = res[i - 1];
 		const b = res[i];
 		assert.ok(
-			a.score > b.score || (a.score === b.score && a.ev.seconds <= b.ev.seconds),
+			a.score > b.score ||
+				(a.score === b.score && a.ev.seconds <= b.ev.seconds),
 			`order violated at ${i}: ${JSON.stringify({ a: a.score, as: a.ev.seconds, b: b.score, bs: b.ev.seconds })}`,
 		);
 	}
 }
 
 test("audit advisor sort: constant score forces ties; order is score desc, then seconds ASC, stable", () => {
-	const res = search(pool as any, st, () => 42) as any[];
+	const res = search(pool as any, st as any, () => 42) as any[];
 	assert.ok(res.length > 5, "expected several candidates");
-	assert.ok(res.every((c) => c.score === 42), "all scores tie");
+	assert.ok(
+		res.every((c) => c.score === 42),
+		"all scores tie",
+	);
 	orderingOk(res);
 	// with all scores tied the result must be sorted by seconds ascending
 	const secs = res.map((c) => c.ev.seconds);
-	assert.deepEqual(secs, secs.slice().sort((x, y) => x - y), "seconds not ascending");
+	assert.deepEqual(
+		secs,
+		secs.slice().sort((x, y) => x - y),
+		"seconds not ascending",
+	);
 	// a stable re-sort with the same comparator is a fixed point (equal scores + equal seconds keep order)
-	const again = res.slice().sort((a, b) => b.score - a.score || a.ev.seconds - b.ev.seconds);
+	const again = res
+		.slice()
+		.sort((a, b) => b.score - a.score || a.ev.seconds - b.ev.seconds);
 	assert.deepEqual(again, res, "not a stable-sort fixed point");
 	// equal-seconds candidates exist and keep their relative order (no reordering among full ties)
 	const groups = new Map<number, number>();
-	for (const c of res) groups.set(c.ev.seconds, (groups.get(c.ev.seconds) || 0) + 1);
+	for (const c of res)
+		groups.set(c.ev.seconds, (groups.get(c.ev.seconds) || 0) + 1);
 	const tied = [...groups.values()].some((n) => n > 1);
-	assert.ok(tied, "expected at least one pair of candidates with equal score AND equal seconds");
+	assert.ok(
+		tied,
+		"expected at least one pair of candidates with equal score AND equal seconds",
+	);
 });
 
 test("audit advisor sort: coarse score creates many ties; ordering property holds on seeded pools", () => {
@@ -65,8 +84,11 @@ test("audit advisor sort: coarse score creates many ties; ordering property hold
 		const keep = 1 + Math.floor(rand() * p.length);
 		p = p.slice(0, keep);
 		if (!p.length) continue;
-		const coarse = rand() < 0.5 ? () => 7 : (_r: number[], ev: any) => Math.round(ev.exp / 100);
-		const res = search(p as any, st, coarse as any) as any[];
+		const coarse =
+			rand() < 0.5
+				? () => 7
+				: (_r: number[], ev: any) => Math.round(ev.exp / 100);
+		const res = search(p as any, st as any, coarse as any) as any[];
 		orderingOk(res);
 	}
 });
@@ -105,8 +127,10 @@ test("audit advisor sort: seeded advise() port == frozen legacy ADVISOR", () => 
 test("audit advisor sort: planted flipped tie-break on a temp copy of search is caught", async () => {
 	const srcPath = join(LOGIC, "voyage", "search.ts");
 	const src = readFileSync(srcPath, "utf8");
-	const from = "out.sort((a, b) => b.score - a.score || a.ev.seconds - b.ev.seconds);";
-	const to = "out.sort((a, b) => b.score - a.score || b.ev.seconds - a.ev.seconds);";
+	const from =
+		"out.sort((a, b) => b.score - a.score || a.ev.seconds - b.ev.seconds);";
+	const to =
+		"out.sort((a, b) => b.score - a.score || b.ev.seconds - a.ev.seconds);";
 	assert.ok(src.includes(from), "search.ts: anchor not found");
 	// plant at logic/ root (outside the voyage/ subfolder) with the import path adjusted, so the
 	// split-proof test's file list is never racing this temp copy
@@ -116,10 +140,14 @@ test("audit advisor sort: planted flipped tie-break on a temp copy of search is 
 		src.replaceAll('"../voyage.ts"', '"./voyage.ts"').replace(from, to),
 	);
 	try {
-		const N = await import("../../src/modules/submersibles/logic/search.controltmp.ts");
-		const good = search(pool as any, st, () => 42) as any[];
-		const bad = N.search(pool as any, st, () => 42) as any[];
-		assert.ok(good.length > 5 && bad.length === good.length, "same candidate set");
+		const tmpMod = "search.controltmp.ts";
+		const N = await import(`../../src/modules/submersibles/logic/${tmpMod}`);
+		const good = search(pool as any, st as any, () => 42) as any[];
+		const bad = N.search(pool as any, st as any, () => 42) as any[];
+		assert.ok(
+			good.length > 5 && bad.length === good.length,
+			"same candidate set",
+		);
 		assert.notEqual(
 			JSON.stringify(bad),
 			JSON.stringify(good),
@@ -127,7 +155,11 @@ test("audit advisor sort: planted flipped tie-break on a temp copy of search is 
 		);
 		// the mutant sorts seconds DESCENDING on ties
 		const badSecs = bad.map((c: any) => c.ev.seconds);
-		assert.deepEqual(badSecs, badSecs.slice().sort((x: number, y: number) => y - x), "mutant shape");
+		assert.deepEqual(
+			badSecs,
+			badSecs.slice().sort((x: number, y: number) => y - x),
+			"mutant shape",
+		);
 		console.log(
 			`audit-advisor-sort: planted flipped tie-break caught (first good seconds ${good[0].ev.seconds}, mutant ${bad[0].ev.seconds})`,
 		);
